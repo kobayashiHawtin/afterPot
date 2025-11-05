@@ -8,6 +8,11 @@ import { useWindowState } from "./hooks/useWindowState";
 import { useTheme } from "./hooks/useTheme";
 import "./TranslatePopup.css";
 
+interface GeminiTranslationResult {
+  translated_text: string;
+  model_used: string;
+}
+
 function TranslatePopup() {
   const [translations, setTranslations] = useState<TranslationResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -208,16 +213,16 @@ function TranslatePopup() {
               es: "Spanish",
             };
             const modelToUse = geminiModel === "auto" ? null : geminiModel;
-            const geminiResult = await invoke<string>("translate_with_gemini", {
+            const geminiResult = await invoke<GeminiTranslationResult>("translate_with_gemini", {
               text,
               targetLang: languageNames[chosenTarget] || chosenTarget,
               apiKey: geminiApiKey,
               model: modelToUse,
             });
-            const modelDisplay = geminiModel === "auto" ? "auto" : geminiModel;
+            const modelDisplay = geminiResult.model_used;
             addTranslation({
               originalText: text,
-              translatedText: geminiResult,
+              translatedText: geminiResult.translated_text,
               detectedLanguage: detectedLang,
               targetLanguage: chosenTarget,
               translationService: `Gemini (${modelDisplay})`,
@@ -277,10 +282,12 @@ function TranslatePopup() {
 
   const togglePin = async () => {
     const next = !alwaysOnTop;
+    console.log(`Toggling pin: ${alwaysOnTop} -> ${next}`);
     setAlwaysOnTop(next);
     appStorage.setAlwaysOnTop(next);
     try {
       await appWindow.setAlwaysOnTop(next);
+      console.log(`Successfully set always on top to: ${next}`);
     } catch (e) {
       console.error("Failed to set always on top:", e);
     }
@@ -350,14 +357,22 @@ function TranslatePopup() {
               e.stopPropagation();
               togglePin();
             }}
+            onMouseDown={(e) => e.stopPropagation()}
             className={`pin-btn ${alwaysOnTop ? "active" : ""}`}
             title={
               alwaysOnTop ? "最前面ピン留めを解除" : "最前面にピン留め"
             }
           >
-            📌
+            📌 {alwaysOnTop ? "ON" : "OFF"}
           </button>
-          <button onClick={handleClose} className="close-btn">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="close-btn"
+          >
             ×
           </button>
         </div>

@@ -248,8 +248,16 @@ async fn get_latest_flash_model(api_key: String) -> Result<String, String> {
     Ok(flash_models[0].clone())
 }
 
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+struct GeminiTranslationResult {
+    translated_text: String,
+    model_used: String,
+}
+
 #[tauri::command]
-async fn translate_with_gemini(text: String, target_lang: String, api_key: String, model: Option<String>) -> Result<String, String> {
+async fn translate_with_gemini(text: String, target_lang: String, api_key: String, model: Option<String>) -> Result<GeminiTranslationResult, String> {
     println!("=== Gemini Translation Start ===");
     println!("Text: {}", redact_text(&text));
     println!("Target Lang: {}", target_lang);
@@ -343,7 +351,10 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
                                             if let Some(part) = content.get(0) {
                                                 if let Some(translated_text) = part["text"].as_str() {
                                                     println!("Translation successful!");
-                                                    return Ok(translated_text.to_string());
+                                                    return Ok(GeminiTranslationResult {
+                                                        translated_text: translated_text.to_string(),
+                                                        model_used: model_name.clone(),
+                                                    });
                                                 }
                                             }
                                         }

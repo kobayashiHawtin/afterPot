@@ -156,7 +156,7 @@ function Settings() {
             type="password"
             value={geminiApiKey}
             onChange={(e) => handleApiKeyChange(e.target.value)}
-            placeholder="Gemini APIキーを入力（なくても使えます）"
+            placeholder="Gemini APIキーを入力"
             className="input-field"
           />
           <small>
