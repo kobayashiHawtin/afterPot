@@ -42,7 +42,7 @@ fn redact_text(s: &str) -> String {
 // Use selection crate's get_text function (like Pot)
 fn get_selected_text() -> String {
     use selection::get_text;
-    
+
     println!("=== Getting selected text using selection crate ===");
     let text = get_text();
     println!("Selected text: {}", redact_text(&text));
@@ -65,16 +65,16 @@ async fn translate_text(text: String, target_lang: String, source_lang: String) 
     println!("Text: {}", redact_text(&text));
     println!("Source lang: {}", source_lang);
     println!("Target lang: {}", target_lang);
-    
+
     // Google Translate Web API (no API key required, same as pot-app)
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
     let url = "https://translate.google.com/translate_a/single";
-    
+
     println!("Sending request to Google Translate...");
-    
+
     match client.get(url)
         .query(&[
             ("client", "gtx"),
@@ -93,13 +93,13 @@ async fn translate_text(text: String, target_lang: String, source_lang: String) 
         Ok(response) => {
             let status = response.status();
             println!("Response status: {}", status);
-            
+
             if response.status().is_success() {
                 match response.json::<serde_json::Value>().await {
                     Ok(json) => {
                         println!("Received JSON response");
                         println!("JSON: {}", serde_json::to_string_pretty(&json).unwrap_or_default());
-                        
+
                         if let Some(sentences) = json["sentences"].as_array() {
                             println!("Found {} sentences", sentences.len());
                             let mut result = String::new();
@@ -151,20 +151,20 @@ async fn get_gemini_models(api_key: String) -> Result<Vec<String>, String> {
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
     // Correct endpoint for listing models
     let url = format!("https://generativelanguage.googleapis.com/v1beta/models?key={}", api_key);
-    
+
     println!("Request URL: {}", url.replace(&api_key, "***"));
-    
+
     match client.get(&url).send().await {
         Ok(response) => {
             let status = response.status();
             println!("Response status: {}", status);
-            
+
             // Get response body as text for debugging
             match response.text().await {
                 Ok(body) => {
                     let preview = truncate_chars(&body, 500);
                     println!("Response body (first 500 chars): {}", preview);
-                    
+
                     if status.is_success() {
                         match serde_json::from_str::<serde_json::Value>(&body) {
                             Ok(json) => {
@@ -231,20 +231,20 @@ fn get_fallback_models() -> Vec<String> {
 #[tauri::command]
 async fn get_latest_flash_model(api_key: String) -> Result<String, String> {
     let models = get_gemini_models(api_key).await?;
-    
+
     // Filter flash models and sort to get the latest
     let mut flash_models: Vec<String> = models
         .into_iter()
         .filter(|m| m.contains("flash") && m.contains("gemini"))
         .collect();
-    
+
     if flash_models.is_empty() {
         return Err("No flash models found".to_string());
     }
-    
+
     // Sort to get the latest version (e.g., gemini-2.5-flash is newer than gemini-1.5-flash)
     flash_models.sort_by(|a, b| b.cmp(a)); // Descending order
-    
+
     Ok(flash_models[0].clone())
 }
 
@@ -255,7 +255,7 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
     println!("Target Lang: {}", target_lang);
     println!("API Key length: {}", api_key.len());
     println!("Model: {:?}", model);
-    
+
     // Use provided model or get the latest flash model
     let model_name = match model {
         Some(m) => {
@@ -276,9 +276,9 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
             }
         }
     };
-    
+
     println!("Final model name: {}", model_name);
-    
+
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(15))
         .build()
@@ -287,9 +287,9 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
         "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
         model_name, api_key
     );
-    
+
     println!("Request URL: {}", url.replace(&api_key, "***"));
-    
+
     // System-style instruction to improve translation quality and preserve formatting/placeholders
     let system_instruction = format!(
         concat!(
@@ -310,7 +310,7 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
         system_instruction,
         text
     );
-    
+
     let params = serde_json::json!({
         "contents": [
             {
@@ -322,14 +322,14 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
             }
         ]
     });
-    
+
     println!("Request params: {}", serde_json::to_string(&params).unwrap_or_default());
-    
+
     match client.post(&url).json(&params).send().await {
         Ok(response) => {
             let status = response.status();
             println!("Response status: {}", status);
-            
+
             if status.is_success() {
                 match response.text().await {
                     Ok(body) => {
@@ -398,10 +398,10 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
 #[tauri::command]
 async fn get_clipboard_text() -> Result<String, String> {
     use clipboard::{ClipboardContext, ClipboardProvider};
-    
+
     let mut ctx: ClipboardContext = ClipboardProvider::new()
         .map_err(|e| format!("Failed to get clipboard context: {}", e))?;
-    
+
     ctx.get_contents()
         .map_err(|e| format!("Failed to get clipboard contents: {}", e))
 }
@@ -414,7 +414,7 @@ async fn detect_language(text: String) -> Result<String, String> {
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
     let url = "https://translate.google.com/translate_a/single";
-    
+
     match client.get(url)
         .query(&[
             ("client", "gtx"),
@@ -465,10 +465,10 @@ async fn detect_language(text: String) -> Result<String, String> {
 #[tauri::command]
 async fn register_hotkey(app_handle: tauri::AppHandle, hotkey: String, state: tauri::State<'_, HotkeyState>) -> Result<String, String> {
     println!("Registering new hotkey: {}", hotkey);
-    
+
     let mut current_hotkey = state.0.lock().unwrap();
     let old_hotkey = current_hotkey.clone();
-    
+
     // Unregister old hotkey if it exists
     if !old_hotkey.is_empty() {
         println!("Unregistering old hotkey: {}", old_hotkey);
@@ -477,24 +477,24 @@ async fn register_hotkey(app_handle: tauri::AppHandle, hotkey: String, state: ta
             Err(e) => println!("Warning: Failed to unregister old hotkey: {}", e),
         }
     }
-    
+
     // Register new hotkey
     let app_handle_clone = app_handle.clone();
     let hotkey_display = hotkey.clone();
     match app_handle.global_shortcut_manager()
         .register(&hotkey, move || {
             println!("=== Global shortcut pressed ===");
-            
+
             // Get text BEFORE showing window
             use selection::get_text;
             let text = get_text();
             println!("Selected text: {}", redact_text(&text));
-            
+
             // Then show window
             let window = app_handle_clone.get_window("translate").unwrap();
             window.show().unwrap();
             window.set_focus().unwrap();
-            
+
             // Emit event with the text
             window.emit("translate-shortcut", text).unwrap();
         }) {
@@ -527,25 +527,25 @@ async fn enable_auto_start() -> Result<String, String> {
         // Get current executable path
         let exe_path = env::current_exe()
             .map_err(|e| format!("Failed to get executable path: {}", e))?;
-        
+
         // Get startup folder path
         let startup_folder = get_startup_folder()?;
-        
+
         // Create shortcut path
         let shortcut_path = startup_folder.join("AfterPot.lnk");
-        
+
         // Create shortcut using PowerShell
         let ps_script = format!(
             r#"$WScriptShell = New-Object -ComObject WScript.Shell; $Shortcut = $WScriptShell.CreateShortcut('{}'); $Shortcut.TargetPath = '{}'; $Shortcut.Save()"#,
             shortcut_path.display(),
             exe_path.display()
         );
-        
+
         let output = std::process::Command::new("powershell")
             .args(&["-Command", &ps_script])
             .output()
             .map_err(|e| format!("Failed to execute PowerShell: {}", e))?;
-        
+
         if output.status.success() {
             println!("Auto-start enabled: {:?}", shortcut_path);
             Ok("自動起動を有効にしました".to_string())
@@ -554,7 +554,7 @@ async fn enable_auto_start() -> Result<String, String> {
             Err(format!("ショートカット作成に失敗しました: {}", error))
         }
     }
-    
+
     #[cfg(not(target_os = "windows"))]
     {
         Err("Auto-start is only supported on Windows".to_string())
@@ -567,7 +567,7 @@ async fn disable_auto_start() -> Result<String, String> {
     {
         let startup_folder = get_startup_folder()?;
         let shortcut_path = startup_folder.join("AfterPot.lnk");
-        
+
         if shortcut_path.exists() {
             std::fs::remove_file(&shortcut_path)
                 .map_err(|e| format!("ショートカットの削除に失敗しました: {}", e))?;
@@ -577,7 +577,7 @@ async fn disable_auto_start() -> Result<String, String> {
             Ok("自動起動は既に無効です".to_string())
         }
     }
-    
+
     #[cfg(not(target_os = "windows"))]
     {
         Err("Auto-start is only supported on Windows".to_string())
@@ -592,7 +592,7 @@ async fn is_auto_start_enabled() -> Result<bool, String> {
         let shortcut_path = startup_folder.join("AfterPot.lnk");
         Ok(shortcut_path.exists())
     }
-    
+
     #[cfg(not(target_os = "windows"))]
     {
         Ok(false)
@@ -602,21 +602,21 @@ async fn is_auto_start_enabled() -> Result<bool, String> {
 #[cfg(target_os = "windows")]
 fn get_startup_folder() -> Result<PathBuf, String> {
     use std::path::PathBuf;
-    
+
     let appdata = std::env::var("APPDATA")
         .map_err(|_| "APPDATA environment variable not found".to_string())?;
-    
+
     let startup_folder = PathBuf::from(appdata)
         .join("Microsoft")
         .join("Windows")
         .join("Start Menu")
         .join("Programs")
         .join("Startup");
-    
+
     if !startup_folder.exists() {
         return Err("Startup folder not found".to_string());
     }
-    
+
     Ok(startup_folder)
 }
 
@@ -638,7 +638,7 @@ fn main() {
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             println!("Second instance detected!");
             println!("argv: {:?}, cwd: {:?}", argv, cwd);
-            
+
             // Show and focus the settings window when a second instance is launched
             if let Some(window) = app.get_window("settings") {
                 let _ = window.show();
@@ -690,7 +690,7 @@ fn main() {
             let app_handle = app.handle();
             let state = app.state::<HotkeyState>();
             let hotkey = state.0.lock().unwrap().clone();
-            
+
             // Register global shortcut (like Pot's implementation)
             // Try to register the saved hotkey (default: Ctrl+Shift+Q)
             let hotkey_for_closure = hotkey.clone();
@@ -698,17 +698,17 @@ fn main() {
             match app.global_shortcut_manager()
                 .register(&hotkey, move || {
                     println!("=== Global shortcut {} pressed ===", hotkey_for_closure);
-                    
+
                     // IMPORTANT: Get text BEFORE showing window (like Pot)
                     use selection::get_text;
                     let text = get_text();
                     println!("Selected text: {}", redact_text(&text));
-                    
+
                     // Then show window
                     let window = app_handle.get_window("translate").unwrap();
                     window.show().unwrap();
                     window.set_focus().unwrap();
-                    
+
                     // Emit event with the text
                     window.emit("translate-shortcut", text).unwrap();
                 }) {

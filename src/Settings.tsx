@@ -39,7 +39,7 @@ function Settings() {
   // Apply theme to document
   const applyTheme = (selectedTheme: "light" | "dark" | "system") => {
     let actualTheme: "light" | "dark";
-    
+
     if (selectedTheme === "system") {
       // Detect system preference
       actualTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -62,14 +62,14 @@ function Settings() {
     try {
       const size = await appWindow.outerSize();
       const position = await appWindow.outerPosition();
-      
+
       const settingsWindowState = {
         width: size.width,
         height: size.height,
         x: position.x,
         y: position.y,
       };
-      
+
       localStorage.setItem("settingsWindowState", JSON.stringify(settingsWindowState));
     } catch (e) {
       console.error("Failed to save settings window state:", e);
@@ -82,12 +82,12 @@ function Settings() {
       const saved = localStorage.getItem("settingsWindowState");
       if (saved) {
         const state = JSON.parse(saved);
-        
+
         // Restore size
         if (state.width && state.height) {
           await appWindow.setSize(new LogicalSize(state.width, state.height));
         }
-        
+
         // Restore position
         if (state.x !== undefined && state.y !== undefined) {
           await appWindow.setPosition(new LogicalPosition(state.x, state.y));
@@ -197,7 +197,7 @@ function Settings() {
     localStorage.setItem("geminiModel", geminiModel);
     localStorage.setItem("targetLanguage", targetLanguage);
     localStorage.setItem("hotkey", hotkey);
-    
+
     alert("設定を保存しました！");
   };
 
@@ -295,7 +295,7 @@ function Settings() {
       const date = new Date(log.timestamp).toLocaleString("ja-JP");
       return `[${date}] ${log.context}: ${log.error}`;
     }).join("\n\n");
-    
+
     const blob = new Blob([logsText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -449,9 +449,9 @@ function Settings() {
           <small className={modelError ? "error-text" : ""}>
             {isLoadingModels && "モデル一覧を取得中..."}
             {!isLoadingModels && modelError && modelError}
-            {!isLoadingModels && !modelError && availableModels.length > 0 && 
+            {!isLoadingModels && !modelError && availableModels.length > 0 &&
               `${availableModels.length}個のモデルが利用可能です (Flash/Pro: ${availableModels.filter(m => m.includes("flash") || m.includes("pro")).length}個)`}
-            {!isLoadingModels && !modelError && geminiApiKey && availableModels.length === 0 && 
+            {!isLoadingModels && !modelError && geminiApiKey && availableModels.length === 0 &&
               "モデルが取得できませんでした"}
             {!geminiApiKey && "※ APIキーを入力すると利用可能なモデルが表示されます"}
           </small>

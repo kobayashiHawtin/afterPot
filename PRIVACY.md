@@ -1,6 +1,6 @@
 # プライバシーポリシー / Privacy Policy
 
-**最終更新日**: 2025年11月5日  
+**最終更新日**: 2025年11月5日
 **バージョン**: 1.0.0
 
 ## 日本語
@@ -11,7 +11,7 @@ AfterPot（以下「本アプリ」）は、以下のデータを収集・使用
 
 #### 1. 選択テキスト
 - **収集内容**: ユーザーが選択し、翻訳を実行したテキスト
-- **送信先**: 
+- **送信先**:
   - Google Translate Web API（無料エンドポイント）
   - Google Gemini API（APIキーを設定した場合のみ）
 - **目的**: 翻訳サービスの提供
@@ -22,13 +22,13 @@ AfterPot（以下「本アプリ」）は、以下のデータを収集・使用
 - **収集内容**: Gemini APIキー（ユーザーが任意に入力）
 - **保存場所**: ブラウザのlocalStorage（平文）
 - **目的**: Gemini翻訳サービスへの認証
-- **セキュリティ**: 
+- **セキュリティ**:
   - ローカルストレージに平文で保存されます
   - 外部への送信はGemini APIへの認証時のみ
   - アプリをアンインストールすると削除されます
 
 #### 3. アプリ設定
-- **収集内容**: 
+- **収集内容**:
   - 選択されたGeminiモデル名
   - デフォルト翻訳先言語
   - ウィンドウの「常に最前面」設定
@@ -39,7 +39,7 @@ AfterPot（以下「本アプリ」）は、以下のデータを収集・使用
 ### ログとデバッグ情報
 
 - **通常モード**: 選択テキストやAPIキーはログに記録されません
-- **詳細ログモード** (`VERBOSE_LOG`環境変数を設定した場合): 
+- **詳細ログモード** (`VERBOSE_LOG`環境変数を設定した場合):
   - デバッグ目的でテキストの一部（最大50文字）がコンソールログに出力される可能性があります
   - 本番環境では使用しないでください
 
@@ -95,7 +95,7 @@ AfterPot ("the App") collects and uses the following data:
 
 #### 1. Selected Text
 - **What we collect**: Text selected and submitted for translation by the user
-- **Where it's sent**: 
+- **Where it's sent**:
   - Google Translate Web API (free endpoint)
   - Google Gemini API (only if API key is configured)
 - **Purpose**: Provide translation services
@@ -106,13 +106,13 @@ AfterPot ("the App") collects and uses the following data:
 - **What we collect**: Gemini API Key (optional, user-provided)
 - **Storage**: Browser's localStorage (plaintext)
 - **Purpose**: Authentication for Gemini translation service
-- **Security**: 
+- **Security**:
   - Stored in plaintext in local storage
   - Only sent to Gemini API for authentication
   - Deleted when app is uninstalled
 
 #### 3. App Settings
-- **What we collect**: 
+- **What we collect**:
   - Selected Gemini model name
   - Default target language
   - "Always on top" window setting
@@ -123,7 +123,7 @@ AfterPot ("the App") collects and uses the following data:
 ### Logs and Debug Information
 
 - **Normal mode**: Selected text and API keys are NOT logged
-- **Verbose log mode** (when `VERBOSE_LOG` environment variable is set): 
+- **Verbose log mode** (when `VERBOSE_LOG` environment variable is set):
   - A portion of text (up to 50 characters) may be output to console logs for debugging purposes
   - Not recommended for production use
 

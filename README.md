@@ -116,7 +116,7 @@ npm run build:win
   - selection: テキスト選択キャプチャ（Pot由来）
 - **Frontend**: React + TypeScript + Vite
 - **UI**: Custom CSS（TailwindCSSスタイル）
-- **APIs**: 
+- **APIs**:
   - Google Translate Web API（無料エンドポイント、APIキー不要）
   - Google Gemini Generative Language API（要APIキー）
 
@@ -220,6 +220,6 @@ MIT License - 詳細は [LICENSE](LICENSE) をご覧ください
 
 ---
 
-**作成**: 2025  
-**バージョン**: 1.0.0  
+**作成**: 2025
+**バージョン**: 1.0.0
 **メンテナンス**: アクティブ

@@ -52,20 +52,20 @@ function TranslatePopup() {
     try {
       const existingLogs = localStorage.getItem("errorLogs");
       const logs = existingLogs ? JSON.parse(existingLogs) : [];
-      
+
       const logEntry = {
         timestamp: Date.now(),
         context,
         error,
       };
-      
+
       logs.unshift(logEntry);
-      
+
       // Keep last 100 error logs
       if (logs.length > 100) {
         logs.splice(100);
       }
-      
+
       localStorage.setItem("errorLogs", JSON.stringify(logs));
     } catch (e) {
       console.error("Failed to save error log:", e);
@@ -141,14 +141,14 @@ function TranslatePopup() {
     try {
       const size = await appWindow.outerSize();
       const position = await appWindow.outerPosition();
-      
+
       const windowState = {
         width: size.width,
         height: size.height,
         x: position.x,
         y: position.y,
       };
-      
+
       localStorage.setItem("windowState", JSON.stringify(windowState));
     } catch (e) {
       console.error("Failed to save window state:", e);
@@ -161,12 +161,12 @@ function TranslatePopup() {
       const saved = localStorage.getItem("windowState");
       if (saved) {
         const state = JSON.parse(saved);
-        
+
         // Restore size
         if (state.width && state.height) {
           await appWindow.setSize(new LogicalSize(state.width, state.height));
         }
-        
+
         // Restore position
         if (state.x !== undefined && state.y !== undefined) {
           await appWindow.setPosition(new LogicalPosition(state.x, state.y));
@@ -190,7 +190,7 @@ function TranslatePopup() {
     // Load and apply theme
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | "system" | null;
     const themeToApply = savedTheme || "system";
-    
+
     const applyTheme = (theme: "light" | "dark" | "system") => {
       let actualTheme: "light" | "dark";
       if (theme === "system") {
@@ -200,7 +200,7 @@ function TranslatePopup() {
       }
       document.documentElement.setAttribute("data-theme", actualTheme);
     };
-    
+
     applyTheme(themeToApply);
 
     // Listen to system theme changes
@@ -379,7 +379,7 @@ function TranslatePopup() {
         if (!loadingGoogle && !loadingGemini) {
           setIsLoading(false);
           clearInterval(id);
-          
+
           // Save to history after all translations complete
           if (translations.length > 0) {
             saveToHistory(text, detectedLangState, chosenTarget, translations);
