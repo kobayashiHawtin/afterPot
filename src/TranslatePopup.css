@@ -1,0 +1,251 @@
+.translate-popup {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px var(--shadow);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: move;
+  -webkit-app-region: drag;
+}
+
+.popup-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  -webkit-app-region: no-drag;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pin-btn {
+  -webkit-app-region: no-drag;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  padding: 2px 6px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.pin-btn:hover { background: #dcfce7; }
+.pin-btn.active { background: #bbf7d0; color: #15803d; border-color: #86efac; }
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 12px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-result {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.results {
+  padding: 16px;
+  max-height: calc(100% - 48px);
+  overflow-y: auto;
+}
+
+.original-text {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.original-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.text {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.translation-item {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: box-shadow 0.2s;
+}
+
+.translation-item:hover {
+  box-shadow: 0 2px 8px var(--shadow-hover);
+}
+
+.service-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 8px;
+}
+
+.lang-info {
+  font-size: 10px;
+  color: #999;
+  font-weight: normal;
+}
+
+.translated-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.service-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-btn {
+  -webkit-app-region: no-drag;
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #e0e7ff;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.copy-btn:hover {
+  background: #e0e7ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
+}
+
+/* Scrollbar styling */
+.results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.results::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 3px;
+}
+
+.results::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.results::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  z-index: 5;
+  -webkit-app-region: no-drag;
+}
+.handle-n { top: -2px; left: 8px; right: 8px; height: 6px; cursor: n-resize; }
+.handle-s { bottom: -2px; left: 8px; right: 8px; height: 6px; cursor: s-resize; }
+.handle-e { right: -2px; top: 8px; bottom: 8px; width: 6px; cursor: e-resize; }
+.handle-w { left: -2px; top: 8px; bottom: 8px; width: 6px; cursor: w-resize; }
+.handle-ne { right: -2px; top: -2px; width: 12px; height: 12px; cursor: ne-resize; }
+.handle-nw { left: -2px; top: -2px; width: 12px; height: 12px; cursor: nw-resize; }
+.handle-se { right: -2px; bottom: -2px; width: 12px; height: 12px; cursor: se-resize; }
+.handle-sw { left: -2px; bottom: -2px; width: 12px; height: 12px; cursor: sw-resize; }
+
+/* Inline spinner for per-service loading */
+.inline-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Optional styling for swap button */
+.swap-btn {
+  background: #ecfeff;
+  color: #0ea5e9;
+  border-color: #bae6fd;
+}
+.swap-btn:hover {
+  background: #e0f2fe;
+  color: #0284c7;
+  border-color: #93c5fd;
+}

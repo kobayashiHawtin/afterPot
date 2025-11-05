@@ -1,0 +1,125 @@
+{
+  "$schema": "https://schema.tauri.app/config/1.5.0",
+  "build": {
+    "beforeBuildCommand": "npm run prepare-icons && npm run build",
+    "beforeDevCommand": "npm run prepare-icons && npm run dev",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "AfterPot",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "clipboard": {
+        "all": true,
+        "readText": true,
+        "writeText": true
+      },
+      "globalShortcut": {
+        "all": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true,
+        "setAlwaysOnTop": true,
+        "setSize": true,
+        "setMinSize": true,
+        "setMaxSize": true,
+        "setPosition": true,
+        "setResizable": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Utility",
+      "copyright": "Copyright © 2025. All rights reserved.",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "com.afterpot.app",
+      "longDescription": "AfterPot is a lightweight Windows 11 resident translator app. Select text and press Ctrl+Shift+Q to instantly translate using Google Translate and Gemini AI. Features automatic language detection, customizable models, and a clean popup interface.",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": [],
+      "shortDescription": "Lightweight Windows 11 resident translator with Google Translate and Gemini AI",
+      "targets": ["nsis"],
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "",
+        "webviewInstallMode": { "type": "offlineInstaller", "silent": true }
+      }
+    },
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src https://translate.google.com https://generativelanguage.googleapis.com"
+    },
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "label": "settings",
+        "fullscreen": false,
+        "height": 500,
+        "resizable": true,
+        "title": "AfterPot - 設定",
+        "width": 600,
+        "center": true,
+        "visible": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "url": "index.html#settings"
+      },
+      {
+        "label": "translate",
+        "fullscreen": false,
+        "height": 640,
+        "resizable": true,
+        "title": "翻訳結果",
+        "width": 480,
+        "center": false,
+        "visible": false,
+        "decorations": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": true,
+        "transparent": true,
+        "minWidth": 320,
+        "minHeight": 200,
+        "url": "index.html#translate"
+      }
+    ]
+  }
+}
