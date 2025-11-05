@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig({
     plugins: [react()],
 
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
@@ -18,4 +18,24 @@ export default defineConfig(async () => ({
             ignored: ["**/src-tauri/**"],
         },
     },
-}));
+    // Production build optimizations
+    build: {
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+                pure_funcs: ['console.log', 'console.info', 'console.debug'],
+            },
+        },
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'react-vendor': ['react', 'react-dom'],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 1000,
+        reportCompressedSize: true,
+    },
+});

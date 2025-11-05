@@ -74,7 +74,7 @@
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": "",
-        "webviewInstallMode": { "type": "offlineInstaller", "silent": true }
+        "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true }
       }
     },
     "security": {
