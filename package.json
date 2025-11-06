@@ -1,6 +1,6 @@
 {
   "name": "afterpot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Windows11常駐翻訳アプリ - グローバルホットキーでGoogle翻訳とGemini API翻訳",
   "type": "module",
   "scripts": {
