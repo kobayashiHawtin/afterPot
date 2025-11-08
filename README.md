@@ -6,7 +6,7 @@
 
 選択したテキストを瞬時に翻訳 - Google翻訳とGemini AIを活用
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/kobayashiHawtin/afterPot/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/kobayashiHawtin/afterPot/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2011-lightgrey.svg)]()
 
@@ -19,9 +19,11 @@
 - 🤖 **デュアル翻訳エンジン**: Google翻訳とGemini AIを同時表示
 - 🎨 **クリーンなUI**: コンパクトなポップアップインターフェース
 - 📌 **常時表示対応**: ピン留めで最前面表示（デフォルトOFF）
+- 🪟 **安定したウィンドウ表示**: 最小化状態からの自動復元、サイズ・位置補正機能
 - 🔒 **プライバシー重視**: ログの機密情報リダクション機能
-- 💾 **WebView2自動セットアップ**: 未インストールの場合は自動ダウンロードしてセットアップ
+- 💾 **軽量インストーラー**: WebView2 Bootstrapper採用で約2.5MB（従来比98%削減）
 - 🆓 **Google翻訳は無料**: APIキー不要（Geminiはオプション）
+- 🛡️ **ロバスト設計**: エラーハンドリング強化、メモリリーク対策、競合状態の回避
 
 ## インストール
 
@@ -31,7 +33,7 @@
 
 ### 手順
 
-1. [Releases](https://github.com/kobayashiHawtin/afterPot/releases/latest)から最新の`AfterPot_1.1.0_x64-setup.exe`をダウンロード
+1. [Releases](https://github.com/kobayashiHawtin/afterPot/releases/latest)から最新の`AfterPot_1.2.0_x64-setup.exe`をダウンロード
 2. インストーラーを実行（WebView2ランタイムが未インストールの場合は自動ダウンロード・インストールされます）
 3. システムトレイにアイコンが表示されます
 
@@ -51,7 +53,19 @@
 - **言語スワップ**: ↔️ボタンで翻訳方向を反転して再翻訳
 - **ウィンドウリサイズ**: 端や角をドラッグしてサイズ変更
 - **ピン留め**: 📌ボタンで最前面表示を切り替え（設定は保存されます）
+- **自動非表示**: ピン留めOFF時、フォーカスを失うと自動的に隠れます（ドラッグ中は除く）
 - **最小化**: ×ボタンでポップアップを閉じます（アプリは終了せずトレイに常駐）
+
+### ウィンドウの挙動
+
+- **翻訳ウィンドウ**:
+  - 初期サイズ 600x700（最小 320x200）
+  - ピン留めOFF時は自動非表示（500ms グレース期間あり）
+  - 最小化状態から自動復元、画面外の場合は中央に再配置
+- **設定ウィンドウ**:
+  - 初期サイズ 600x500
+  - 極小サイズ（100x100など）を自動検出して正常サイズに修正
+  - 閉じてもウィンドウは破棄されず、次回即座に表示可能
 
 ### 設定
 
@@ -115,10 +129,26 @@ npm run build:win
   - serde_json: JSON処理
   - selection: テキスト選択キャプチャ（Pot由来）
 - **Frontend**: React + TypeScript + Vite
+  - strict モード有効（型安全性強化）
+  - カスタムフック活用（useRef による競合状態回避）
 - **UI**: Custom CSS（TailwindCSSスタイル）
 - **APIs**:
   - Google Translate Web API（無料エンドポイント、APIキー不要）
   - Google Gemini Generative Language API（要APIキー）
+- **Build**:
+  - Vite terser minification（console.log 除去、コード分割）
+  - NSIS installer with WebView2 downloadBootstrapper（軽量化）
+
+### 安定性と品質保証
+
+- **エラーハンドリング**: unwrap 排除、Result/Option 安全処理
+- **メモリ管理**: interval/timeout クリーンアップ、履歴・ログ上限制御（定数化）
+- **競合制御**: translationId による古いリクエストの無効化、isDraggingRef によるフォーカス競合回避
+- **ウィンドウ管理**:
+  - 破棄防止（CloseRequested インターセプト）
+  - サイズ・位置自動補正
+  - グレース期間による誤 blur 無視（500ms）
+- **CI/CD**: GitHub Actions（type check / build / cargo check）
 
 ## トラブルシューティング
 
@@ -127,6 +157,21 @@ npm run build:win
 - 他のアプリケーション（例: Pot, PowerToys）が同じショートカットを使用していないか確認
 - アプリを再起動してみる
 - ログに `WARNING: Failed to register global shortcut` が出ている場合は競合の可能性
+
+### 翻訳ウィンドウが表示されない
+
+- ログで `translate.show() success` が出ているか確認（ログ有効化: `set VERBOSE_LOG=1 && npm run tauri dev`）
+- Win+Tab でウィンドウのサムネイルが見えるか確認
+- 最新版では以下の対策を実装済み:
+  - 最小化状態からの自動復元（`unminimize()`）
+  - 画面外位置の場合は中央に再配置（`center()`）
+  - 極小サイズの自動検出と修正
+  - 閉じたウィンドウの破棄防止（hide処理に変換）
+
+### 設定ウィンドウが極小サイズで表示される
+
+- v1.2.0 で自動修正機能を実装済み（400x300未満の場合は600x500に自動リサイズ）
+- それでも発生する場合はログを確認し issue で報告してください
 
 ### 翻訳が失敗する
 
@@ -179,23 +224,59 @@ MIT License - 詳細は [LICENSE](LICENSE) をご覧ください
 - コード署名未実装（Windows Defender警告が出る場合があります）
 - Google無料エンドポイントの利用規約は明確ではありません（商用利用の際は公式APIの使用を推奨）
 - 自動更新機能未実装
-- 翻訳履歴機能なし
-- 単一インスタンス制御未実装（複数起動可能）
+- 翻訳履歴機能なし（エラーログ・履歴は100件上限でlocalStorageに保存）
 
 ## ロードマップ
 
-### 近日中
+### v1.3.0（計画中）
 - [ ] ホットキーカスタマイズUI
 - [ ] 自動起動オプション（Windows起動時）
-- [ ] 単一インスタンス制御
 
 ### 将来的に
-- [ ] 翻訳履歴機能
+- [ ] ランタイムスキーマバリデーション（zod導入）
+- [ ] 翻訳履歴の永続化とUI
 - [ ] より多くの言語対応（中国語、韓国語など）
 - [ ] コード署名の実装
 - [ ] 自動更新機能（Tauri Updater）
 - [ ] 公式Google Cloud Translation APIのサポート
 - [ ] プロキシ設定UI
+
+## 変更履歴
+
+### v1.2.0（開発中 - 2025-01-08）
+- 🐛 ウィンドウ表示安定性の大幅向上
+  - 最小化状態からの確実な復元（unminimize）
+  - 画面外位置の自動中央配置
+  - 極小サイズ（100x100等）の自動検出と修正（settings: 600x500, translate: 600x400）
+  - ウィンドウ破棄の防止（CloseRequested → hide 変換）
+- ️ 安定性・品質改善
+  - unwrap 排除（安全なエラーハンドリング）
+  - メモリリーク対策（interval/timeout クリーンアップ）
+  - 競合状態の回避（translationId / isDraggingRef による race condition 対策）
+  - ログ・履歴の上限定数化（MAX_HISTORY_ENTRIES / MAX_ERROR_LOGS = 100）
+- 🔧 UX改善
+  - 自動非表示機能（ピン留めOFF時のフォーカス喪失で自動hide）
+  - 500ms グレース期間（起動直後の誤 blur イベント無視）
+  - ドラッグ中の非表示競合回避（isDraggingRef による即座の状態チェック）
+- 📝 診断・開発者体験
+  - 詳細ログ追加（VERBOSE_LOG 環境変数でデバッグ情報表示）
+  - show/focus/size/position の成功/失敗ログ
+  - ウィンドウ最終状態のログ出力
+- 🔄 CI/CD整備
+  - GitHub Actions ワークフロー追加（type check / frontend build / cargo check）
+  - branch protection 準備完了
+
+### v1.1.0（2025-01-07）
+- ✨ インストーラーサイズ削減（188MB → 2.5MB、WebView2 Bootstrapper採用）
+- 🐛 翻訳ウィンドウが表示されない問題の初期対応
+- 📝 ログ改善とデバッグ機能追加
+
+### v1.0.0（初回リリース）
+- 🎉 基本機能実装
+  - グローバルホットキー（Ctrl+Shift+Q）
+  - デュアル翻訳エンジン（Google / Gemini）
+  - 自動言語検出
+  - システムトレイ常駐
 
 ## 貢献
 
@@ -221,5 +302,5 @@ MIT License - 詳細は [LICENSE](LICENSE) をご覧ください
 ---
 
 **作成**: 2025
-**バージョン**: 1.1.0
+**バージョン**: 1.2.0 (開発中)
 **メンテナンス**: アクティブ

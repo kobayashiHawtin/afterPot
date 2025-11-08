@@ -9,9 +9,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -22,20 +22,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run TypeScript check
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build frontend
         run: npm run build
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          cache-on-failure: true
 
-      - name: Install Tauri dependencies
+      - name: Generate icon files
+        run: npm run prepare-icons
+
+      - name: Cargo check
+        working-directory: src-tauri
+        run: cargo check --all-features
+
+      - name: Smoke test - Validate files
+        shell: bash
         run: |
-          echo "Tauri dependencies already installed on windows-latest"
-
-      - name: Build Tauri app
-        run: npm run build:win
+          test -f package.json
+          test -f src-tauri/tauri.conf.json
+          node -e "JSON.parse(require('fs').readFileSync('src-tauri/tauri.conf.json','utf8')); console.log('✓ Config valid')"

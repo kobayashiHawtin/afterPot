@@ -15,7 +15,7 @@ out/
 # Tauri / Rust build outputs
 src-tauri/target/
 target/
-src-tauri/Cargo.lock
+# Note: Cargo.lock is tracked for applications (not libraries)
 *.pdb
 *.exe
 *.dll

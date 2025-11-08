@@ -1,5 +1,9 @@
 import type { HistoryEntry, ErrorLog, WindowState, Theme } from "../types";
 
+// Caps to prevent unbounded localStorage growth
+const MAX_HISTORY_ENTRIES = 100;
+const MAX_ERROR_LOGS = 100;
+
 // LocalStorage keys
 const STORAGE_KEYS = {
     GEMINI_API_KEY: "geminiApiKey",
@@ -150,8 +154,8 @@ export const appStorage = {
     addTranslationHistory(entry: HistoryEntry): void {
         const history = this.getTranslationHistory();
         history.unshift(entry);
-        // Keep only last 100 entries
-        const trimmed = history.slice(0, 100);
+        // Keep only last N entries
+        const trimmed = history.slice(0, MAX_HISTORY_ENTRIES);
         this.setTranslationHistory(trimmed);
     },
     clearTranslationHistory(): void {
@@ -168,8 +172,8 @@ export const appStorage = {
     addErrorLog(log: ErrorLog): void {
         const logs = this.getErrorLogs();
         logs.unshift(log);
-        // Keep only last 100 logs
-        const trimmed = logs.slice(0, 100);
+        // Keep only last N logs
+        const trimmed = logs.slice(0, MAX_ERROR_LOGS);
         this.setErrorLogs(trimmed);
     },
     clearErrorLogs(): void {
