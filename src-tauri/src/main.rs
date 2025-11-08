@@ -542,16 +542,20 @@ async fn register_hotkey(app_handle: tauri::AppHandle, hotkey: String, state: ta
             let text = get_text();
             println!("Selected text: {}", redact_text(&text));
 
-            // Then show window
+            // Then show window and focus
             if let Some(window) = app_handle_clone.get_window("translate") {
                 let _ = window.set_always_on_top(true);
-                if let Err(e) = window.show() {
-                    eprintln!("Failed to show translate window: {}", e);
+                println!("Attempting to show translate window...");
+                match window.show() {
+                    Ok(_) => println!("show() success"),
+                    Err(e) => eprintln!("Failed to show translate window: {}", e),
                 }
-                if let Err(e) = window.set_focus() {
-                    eprintln!("Failed to focus translate window: {}", e);
+                println!("Attempting to focus translate window...");
+                match window.set_focus() {
+                    Ok(_) => println!("set_focus() success"),
+                    Err(e) => eprintln!("Failed to focus translate window: {}", e),
                 }
-                
+
                 // Emit event with the text
                 if let Err(e) = window.emit("translate-shortcut", text) {
                     eprintln!("Failed to emit translate-shortcut event: {}", e);
@@ -707,8 +711,30 @@ fn main() {
 
             // Show and focus the settings window when a second instance is launched
             if let Some(window) = app.get_window("settings") {
-                let _ = window.show();
-                let _ = window.set_focus();
+                println!("Second instance: restoring settings window");
+                let _ = window.unminimize();
+                // Ensure proper size (prevent tiny window bug)
+                if let Ok(sz) = window.outer_size() {
+                    if sz.width < 400 || sz.height < 300 {
+                        println!("Settings window too small ({:?}), resizing to 600x500", sz);
+                        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 600.0, height: 500.0 }));
+                    }
+                }
+                match window.show() {
+                    Ok(_) => println!("settings.show() success"),
+                    Err(e) => eprintln!("Failed to show settings window: {}", e),
+                }
+                let _ = window.center();
+                match window.set_focus() {
+                    Ok(_) => println!("settings.set_focus() success"),
+                    Err(e) => eprintln!("Failed to focus settings window: {}", e),
+                }
+                // Diagnostic: report final state
+                if let Ok(sz) = window.outer_size() {
+                    if let Ok(pos) = window.outer_position() {
+                        println!("Settings window final: size={:?}, pos={:?}", sz, pos);
+                    }
+                }
             }
         }))
         .manage(ClipboardState(Default::default()))
@@ -718,11 +744,28 @@ fn main() {
             SystemTrayEvent::LeftClick { .. } => {
                 // 左クリックで設定画面を開く
                 if let Some(window) = app.get_window("settings") {
-                    if let Err(e) = window.show() {
-                        eprintln!("Failed to show settings window: {}", e);
+                    let _ = window.unminimize();
+                    // Ensure proper size
+                    if let Ok(sz) = window.outer_size() {
+                        if sz.width < 400 || sz.height < 300 {
+                            println!("Settings window too small ({:?}), resizing to 600x500", sz);
+                            let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 600.0, height: 500.0 }));
+                        }
                     }
-                    if let Err(e) = window.set_focus() {
-                        eprintln!("Failed to focus settings window: {}", e);
+                    match window.show() {
+                        Ok(_) => println!("settings.show() success"),
+                        Err(e) => eprintln!("Failed to show settings window: {}", e),
+                    }
+                    let _ = window.center();
+                    match window.set_focus() {
+                        Ok(_) => println!("settings.set_focus() success"),
+                        Err(e) => eprintln!("Failed to focus settings window: {}", e),
+                    }
+                    // Diagnostic
+                    if let Ok(sz) = window.outer_size() {
+                        if let Ok(pos) = window.outer_position() {
+                            println!("Settings window final: size={:?}, pos={:?}", sz, pos);
+                        }
                     }
                 } else {
                     eprintln!("Settings window not found");
@@ -735,11 +778,28 @@ fn main() {
                     }
                     "settings" => {
                         if let Some(window) = app.get_window("settings") {
-                            if let Err(e) = window.show() {
-                                eprintln!("Failed to show settings window: {}", e);
+                            let _ = window.unminimize();
+                            // Ensure proper size
+                            if let Ok(sz) = window.outer_size() {
+                                if sz.width < 400 || sz.height < 300 {
+                                    println!("Settings window too small ({:?}), resizing to 600x500", sz);
+                                    let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 600.0, height: 500.0 }));
+                                }
                             }
-                            if let Err(e) = window.set_focus() {
-                                eprintln!("Failed to focus settings window: {}", e);
+                            match window.show() {
+                                Ok(_) => println!("settings.show() success"),
+                                Err(e) => eprintln!("Failed to show settings window: {}", e),
+                            }
+                            let _ = window.center();
+                            match window.set_focus() {
+                                Ok(_) => println!("settings.set_focus() success"),
+                                Err(e) => eprintln!("Failed to focus settings window: {}", e),
+                            }
+                            // Diagnostic
+                            if let Ok(sz) = window.outer_size() {
+                                if let Ok(pos) = window.outer_position() {
+                                    println!("Settings window final: size={:?}, pos={:?}", sz, pos);
+                                }
                             }
                         } else {
                             eprintln!("Settings window not found");
@@ -791,13 +851,30 @@ fn main() {
                     // Then show window
                     if let Some(window) = app_handle.get_window("translate") {
                         let _ = window.set_always_on_top(true);
-                        if let Err(e) = window.show() {
-                            eprintln!("Failed to show translate window: {}", e);
+                        let _ = window.unminimize();
+                        // Ensure reasonable size
+                        if let Ok(sz) = window.outer_size() {
+                            if sz.width < 320 || sz.height < 200 {
+                                println!("Translate window too small ({:?}), resizing to 600x400", sz);
+                                let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 600.0, height: 400.0 }));
+                            }
                         }
-                        if let Err(e) = window.set_focus() {
-                            eprintln!("Failed to focus translate window: {}", e);
+                        match window.show() {
+                            Ok(_) => println!("translate.show() success"),
+                            Err(e) => eprintln!("Failed to show translate window: {}", e),
                         }
-                        
+                        let _ = window.center();
+                        match window.set_focus() {
+                            Ok(_) => println!("translate.set_focus() success"),
+                            Err(e) => eprintln!("Failed to focus translate window: {}", e),
+                        }
+                        // Diagnostic
+                        if let Ok(sz) = window.outer_size() {
+                            if let Ok(pos) = window.outer_position() {
+                                println!("Translate window final: size={:?}, pos={:?}", sz, pos);
+                            }
+                        }
+
                         // Emit event with the text
                         if let Err(e) = window.emit("translate-shortcut", text) {
                             eprintln!("Failed to emit translate-shortcut event: {}", e);
@@ -814,6 +891,32 @@ fn main() {
                     eprintln!("The hotkey may be in use by another application.");
                     eprintln!("Please change the hotkey in Settings or close conflicting applications.");
                 }
+            }
+
+            // Intercept close events: hide instead of destroying settings & translate windows
+            if let Some(settings_win) = app.get_window("settings") {
+                let win_clone = settings_win.clone();
+                settings_win.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        println!("Intercepted settings close - hiding instead of closing");
+                        let _ = win_clone.hide();
+                        api.prevent_close();
+                    }
+                });
+            } else {
+                eprintln!("(setup) settings window not found to attach close handler");
+            }
+            if let Some(translate_win) = app.get_window("translate") {
+                let win_clone = translate_win.clone();
+                translate_win.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        println!("Intercepted translate close - hiding instead of closing");
+                        let _ = win_clone.hide();
+                        api.prevent_close();
+                    }
+                });
+            } else {
+                eprintln!("(setup) translate window not found to attach close handler");
             }
 
             Ok(())

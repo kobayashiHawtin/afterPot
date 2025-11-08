@@ -28,6 +28,8 @@ function TranslatePopup() {
   const completionTimerRef = useRef<number | null>(null);
   const translationIdRef = useRef<number>(0);
   const isDraggingRef = useRef<boolean>(false); // ref (for immediate focus-loss guard)
+  // Grace period after mount to ignore transient blur/focus churn
+  const mountTimeRef = useRef<number>(Date.now());
 
   // Use custom hooks
   useTheme(); // Apply theme
@@ -170,13 +172,13 @@ function TranslatePopup() {
       let detectedLang = "unknown";
       try {
         detectedLang = await invoke<string>("detect_language", { text });
-        
+
         // Check if this translation is still current
         if (currentTranslationId !== translationIdRef.current) {
           console.log("Translation cancelled - newer request started");
           return;
         }
-        
+
         detectedLangState = detectedLang;
         setDetectedLangState(detectedLang);
       } catch (error) {
@@ -200,7 +202,7 @@ function TranslatePopup() {
             targetLang: chosenTarget,
             sourceLang: detectedLang === "unknown" ? "auto" : detectedLang,
           });
-          
+
           // Only add result if this is still the current translation
           if (currentTranslationId === translationIdRef.current) {
             addTranslation({
@@ -240,7 +242,7 @@ function TranslatePopup() {
               apiKey: geminiApiKey,
               model: modelToUse,
             });
-            
+
             // Only add result if this is still the current translation
             if (currentTranslationId === translationIdRef.current) {
               const modelDisplay = geminiResult.model_used;
@@ -368,14 +370,33 @@ function TranslatePopup() {
   // Auto-hide when focus is lost (if not pinned)
   useEffect(() => {
     const handleBlur = async () => {
+      // Ignore early blur events right after window appears (OS focus churn)
+      const sinceMount = Date.now() - mountTimeRef.current;
+      if (sinceMount < 500) {
+        console.log(`Ignoring blur during grace period (${sinceMount}ms)`);
+        return;
+      }
       // Use ref for instantaneous state (guard race between drag start and focus loss)
       if (!alwaysOnTop && !isDraggingRef.current) {
-        console.log("Window lost focus and not pinned - hiding");
         try {
+          // Double-check focus/visibility before hiding to avoid false positives
+          let focused = false;
+          let visible = true;
+          try { focused = await appWindow.isFocused(); } catch { /* noop */ }
+          try { visible = await appWindow.isVisible(); } catch { /* noop */ }
+
+          if (focused) {
+            console.log("Blur reported but window is focused; skip hide");
+            return;
+          }
+          if (!visible) {
+            console.log("Window already not visible; skip hide");
+            return;
+          }
+
+          console.log("Window lost focus and not pinned - hiding");
           await appWindow.hide();
-        } catch (e) {
-          console.error("Failed to hide window:", e);
-        }
+        } catch { /* ignore hide failure */ }
       }
     };
 
