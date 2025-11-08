@@ -58,11 +58,11 @@
 
 ### ウィンドウの挙動
 
-- **翻訳ウィンドウ**: 
+- **翻訳ウィンドウ**:
   - 初期サイズ 600x700（最小 320x200）
   - ピン留めOFF時は自動非表示（500ms グレース期間あり）
   - 最小化状態から自動復元、画面外の場合は中央に再配置
-- **設定ウィンドウ**: 
+- **設定ウィンドウ**:
   - 初期サイズ 600x500
   - 極小サイズ（100x100など）を自動検出して正常サイズに修正
   - 閉じてもウィンドウは破棄されず、次回即座に表示可能
@@ -135,7 +135,7 @@ npm run build:win
 - **APIs**:
   - Google Translate Web API（無料エンドポイント、APIキー不要）
   - Google Gemini Generative Language API（要APIキー）
-- **Build**: 
+- **Build**:
   - Vite terser minification（console.log 除去、コード分割）
   - NSIS installer with WebView2 downloadBootstrapper（軽量化）
 
@@ -144,7 +144,7 @@ npm run build:win
 - **エラーハンドリング**: unwrap 排除、Result/Option 安全処理
 - **メモリ管理**: interval/timeout クリーンアップ、履歴・ログ上限制御（定数化）
 - **競合制御**: translationId による古いリクエストの無効化、isDraggingRef によるフォーカス競合回避
-- **ウィンドウ管理**: 
+- **ウィンドウ管理**:
   - 破棄防止（CloseRequested インターセプト）
   - サイズ・位置自動補正
   - グレース期間による誤 blur 無視（500ms）
