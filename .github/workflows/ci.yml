@@ -39,13 +39,8 @@ jobs:
           workspaces: src-tauri
           cache-on-failure: true
 
-      - name: Debug - Check icon files
-        working-directory: src-tauri
-        shell: bash
-        run: |
-          pwd
-          ls -la icons/ || echo "icons directory not found"
-          test -f icons/icon.ico && echo "✓ icon.ico exists" || echo "✗ icon.ico missing"
+      - name: Generate icon files
+        run: npm run prepare-icons
 
       - name: Cargo check
         working-directory: src-tauri
