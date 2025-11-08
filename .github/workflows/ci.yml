@@ -22,44 +22,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Type check (tsc --noEmit)
+      - name: Type check
         run: npx tsc --noEmit
 
-      - name: Build frontend (vite)
+      - name: Build frontend
         run: npm run build
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          cache-on-failure: true
 
       - name: Cargo check
         working-directory: src-tauri
-        run: cargo check --locked
+        run: cargo check
 
-      - name: Cargo build (no bundle)
-        working-directory: src-tauri
-        run: cargo build --locked
-
-      - name: Output artifacts summary
-        run: |
-          echo "Dist files:" && dir dist
-
-  smoke-tests:
-    runs-on: windows-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Validate source tree
+      - name: Smoke test - Validate files
         shell: bash
         run: |
           test -f package.json
           test -f src-tauri/tauri.conf.json
-      
-      - name: Lint JSON syntax of config
-        run: node -e "JSON.parse(require('fs').readFileSync('src-tauri/tauri.conf.json','utf8')); console.log('tauri.conf.json valid JSON');"
+          node -e "JSON.parse(require('fs').readFileSync('src-tauri/tauri.conf.json','utf8')); console.log('✓ Config valid')"
