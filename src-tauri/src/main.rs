@@ -514,7 +514,11 @@ async fn detect_language(text: String) -> Result<String, String> {
 async fn register_hotkey(app_handle: tauri::AppHandle, hotkey: String, state: tauri::State<'_, HotkeyState>) -> Result<String, String> {
     println!("Registering new hotkey: {}", hotkey);
 
-    let mut current_hotkey = state.0.lock().unwrap();
+    let mut current_hotkey = state.0.lock().map_err(|e| {
+        let msg = format!("Failed to lock hotkey state: {}", e);
+        eprintln!("{}", msg);
+        msg
+    })?;
     let old_hotkey = current_hotkey.clone();
 
     // Unregister old hotkey if it exists
@@ -539,12 +543,22 @@ async fn register_hotkey(app_handle: tauri::AppHandle, hotkey: String, state: ta
             println!("Selected text: {}", redact_text(&text));
 
             // Then show window
-            let window = app_handle_clone.get_window("translate").unwrap();
-            window.show().unwrap();
-            window.set_focus().unwrap();
-
-            // Emit event with the text
-            window.emit("translate-shortcut", text).unwrap();
+            if let Some(window) = app_handle_clone.get_window("translate") {
+                let _ = window.set_always_on_top(true);
+                if let Err(e) = window.show() {
+                    eprintln!("Failed to show translate window: {}", e);
+                }
+                if let Err(e) = window.set_focus() {
+                    eprintln!("Failed to focus translate window: {}", e);
+                }
+                
+                // Emit event with the text
+                if let Err(e) = window.emit("translate-shortcut", text) {
+                    eprintln!("Failed to emit translate-shortcut event: {}", e);
+                }
+            } else {
+                eprintln!("Translate window not found");
+            }
         }) {
         Ok(_) => {
             println!("Successfully registered new hotkey: {}", hotkey_display);
@@ -561,7 +575,11 @@ async fn register_hotkey(app_handle: tauri::AppHandle, hotkey: String, state: ta
 
 #[tauri::command]
 async fn get_current_hotkey(state: tauri::State<'_, HotkeyState>) -> Result<String, String> {
-    let hotkey = state.0.lock().unwrap();
+    let hotkey = state.0.lock().map_err(|e| {
+        let msg = format!("Failed to lock hotkey state: {}", e);
+        eprintln!("{}", msg);
+        msg
+    })?;
     Ok(hotkey.clone())
 }
 
@@ -697,27 +715,39 @@ fn main() {
         .manage(HotkeyState(Mutex::new("Ctrl+Shift+Q".to_string())))
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| match event {
-            SystemTrayEvent::LeftClick {
-                position: _,
-                size: _,
-                ..
-            } => {
+            SystemTrayEvent::LeftClick { .. } => {
                 // 左クリックで設定画面を開く
-                let window = app.get_window("settings").unwrap();
-                window.show().unwrap();
-                window.set_focus().unwrap();
+                if let Some(window) = app.get_window("settings") {
+                    if let Err(e) = window.show() {
+                        eprintln!("Failed to show settings window: {}", e);
+                    }
+                    if let Err(e) = window.set_focus() {
+                        eprintln!("Failed to focus settings window: {}", e);
+                    }
+                } else {
+                    eprintln!("Settings window not found");
+                }
             }
-            SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-                "quit" => {
-                    std::process::exit(0);
+            SystemTrayEvent::MenuItemClick { id, .. } => {
+                match id.as_str() {
+                    "quit" => {
+                        std::process::exit(0);
+                    }
+                    "settings" => {
+                        if let Some(window) = app.get_window("settings") {
+                            if let Err(e) = window.show() {
+                                eprintln!("Failed to show settings window: {}", e);
+                            }
+                            if let Err(e) = window.set_focus() {
+                                eprintln!("Failed to focus settings window: {}", e);
+                            }
+                        } else {
+                            eprintln!("Settings window not found");
+                        }
+                    }
+                    _ => {}
                 }
-                "settings" => {
-                    let window = app.get_window("settings").unwrap();
-                    window.show().unwrap();
-                    window.set_focus().unwrap();
-                }
-                _ => {}
-            },
+            }
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
@@ -737,7 +767,13 @@ fn main() {
         .setup(|app| {
             let app_handle = app.handle();
             let state = app.state::<HotkeyState>();
-            let hotkey = state.0.lock().unwrap().clone();
+            let hotkey = match state.0.lock() {
+                Ok(guard) => guard.clone(),
+                Err(e) => {
+                    eprintln!("Failed to lock hotkey state in setup: {}", e);
+                    "Ctrl+Shift+Q".to_string() // Fallback to default
+                }
+            };
 
             // Register global shortcut (like Pot's implementation)
             // Try to register the saved hotkey (default: Ctrl+Shift+Q)
@@ -753,12 +789,22 @@ fn main() {
                     println!("Selected text: {}", redact_text(&text));
 
                     // Then show window
-                    let window = app_handle.get_window("translate").unwrap();
-                    window.show().unwrap();
-                    window.set_focus().unwrap();
-
-                    // Emit event with the text
-                    window.emit("translate-shortcut", text).unwrap();
+                    if let Some(window) = app_handle.get_window("translate") {
+                        let _ = window.set_always_on_top(true);
+                        if let Err(e) = window.show() {
+                            eprintln!("Failed to show translate window: {}", e);
+                        }
+                        if let Err(e) = window.set_focus() {
+                            eprintln!("Failed to focus translate window: {}", e);
+                        }
+                        
+                        // Emit event with the text
+                        if let Err(e) = window.emit("translate-shortcut", text) {
+                            eprintln!("Failed to emit translate-shortcut event: {}", e);
+                        }
+                    } else {
+                        eprintln!("Translate window not found");
+                    }
                 }) {
                 Ok(_) => {
                     println!("Successfully registered global shortcut: {}", hotkey_for_log);

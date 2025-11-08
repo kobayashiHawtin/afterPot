@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from "@tauri-apps/api/event";
 import { appWindow, LogicalPosition, LogicalSize } from "@tauri-apps/api/window";
@@ -25,6 +25,9 @@ function TranslatePopup() {
   const [currentTargetLang, setCurrentTargetLang] = useState<string>("ja");
   const [manualTargetLang, setManualTargetLang] = useState<string | null>(null);
   const [alwaysOnTop, setAlwaysOnTop] = useState<boolean>(false);
+  const completionTimerRef = useRef<number | null>(null);
+  const translationIdRef = useRef<number>(0);
+  const isDraggingRef = useRef<boolean>(false); // ref (for immediate focus-loss guard)
 
   // Use custom hooks
   useTheme(); // Apply theme
@@ -145,6 +148,10 @@ function TranslatePopup() {
   };
 
   const handleTranslate = async (text: string) => {
+    // Cancel previous translation by incrementing ID
+    translationIdRef.current += 1;
+    const currentTranslationId = translationIdRef.current;
+
     setIsLoading(true);
     setTranslations([]);
     setLoadingGoogle(false);
@@ -163,9 +170,19 @@ function TranslatePopup() {
       let detectedLang = "unknown";
       try {
         detectedLang = await invoke<string>("detect_language", { text });
+        
+        // Check if this translation is still current
+        if (currentTranslationId !== translationIdRef.current) {
+          console.log("Translation cancelled - newer request started");
+          return;
+        }
+        
         detectedLangState = detectedLang;
         setDetectedLangState(detectedLang);
-      } catch {}
+      } catch (error) {
+        console.warn("Language detection failed:", error);
+        logError("Language Detection", String(error));
+      }
 
       // Choose target
       let autoTargetLang = targetLang;
@@ -183,13 +200,17 @@ function TranslatePopup() {
             targetLang: chosenTarget,
             sourceLang: detectedLang === "unknown" ? "auto" : detectedLang,
           });
-          addTranslation({
-            originalText: text,
-            translatedText: googleResult,
-            detectedLanguage: detectedLang,
-            targetLanguage: chosenTarget,
-            translationService: "Google (Free)",
-          });
+          
+          // Only add result if this is still the current translation
+          if (currentTranslationId === translationIdRef.current) {
+            addTranslation({
+              originalText: text,
+              translatedText: googleResult,
+              detectedLanguage: detectedLang,
+              targetLanguage: chosenTarget,
+              translationService: "Google (Free)",
+            });
+          }
         } catch (error) {
           console.error("Google Translate failed:", error);
           logError("Google Translate", String(error));
@@ -219,14 +240,18 @@ function TranslatePopup() {
               apiKey: geminiApiKey,
               model: modelToUse,
             });
-            const modelDisplay = geminiResult.model_used;
-            addTranslation({
-              originalText: text,
-              translatedText: geminiResult.translated_text,
-              detectedLanguage: detectedLang,
-              targetLanguage: chosenTarget,
-              translationService: `Gemini (${modelDisplay})`,
-            });
+            
+            // Only add result if this is still the current translation
+            if (currentTranslationId === translationIdRef.current) {
+              const modelDisplay = geminiResult.model_used;
+              addTranslation({
+                originalText: text,
+                translatedText: geminiResult.translated_text,
+                detectedLanguage: detectedLang,
+                targetLanguage: chosenTarget,
+                translationService: `Gemini (${modelDisplay})`,
+              });
+            }
           } catch (error) {
             console.error("Gemini translation failed:", error);
             logError("Gemini Translation", String(error));
@@ -238,14 +263,37 @@ function TranslatePopup() {
     } catch (error) {
       console.error("Translation failed:", error);
     } finally {
-      const id = setInterval(() => {
+      // Clear any existing completion timer
+      if (completionTimerRef.current !== null) {
+        clearInterval(completionTimerRef.current);
+        completionTimerRef.current = null;
+      }
+
+      // Set timeout to prevent infinite polling (max 10 seconds)
+      const startTime = Date.now();
+      const MAX_WAIT_TIME = 10000;
+
+      completionTimerRef.current = window.setInterval(() => {
         if (!loadingGoogle && !loadingGemini) {
           setIsLoading(false);
-          clearInterval(id);
+          if (completionTimerRef.current !== null) {
+            clearInterval(completionTimerRef.current);
+            completionTimerRef.current = null;
+          }
 
           // Save to history after all translations complete
           if (translations.length > 0) {
             saveToHistory(text, detectedLangState, chosenTarget, translations);
+          }
+        } else if (Date.now() - startTime > MAX_WAIT_TIME) {
+          // Timeout: force completion
+          console.warn("Translation completion timeout - forcing stop");
+          setIsLoading(false);
+          setLoadingGoogle(false);
+          setLoadingGemini(false);
+          if (completionTimerRef.current !== null) {
+            clearInterval(completionTimerRef.current);
+            completionTimerRef.current = null;
           }
         }
       }, 100);
@@ -262,7 +310,11 @@ function TranslatePopup() {
   };
 
   const handleDragStart = async () => {
+    // Set ref synchronously so focus change events see dragging state immediately
+    isDraggingRef.current = true;
     await appWindow.startDragging();
+    // Drag finished
+    isDraggingRef.current = false;
   };
 
   const handleSwapLanguages = () => {
@@ -310,6 +362,41 @@ function TranslatePopup() {
 
     return () => {
       unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  // Auto-hide when focus is lost (if not pinned)
+  useEffect(() => {
+    const handleBlur = async () => {
+      // Use ref for instantaneous state (guard race between drag start and focus loss)
+      if (!alwaysOnTop && !isDraggingRef.current) {
+        console.log("Window lost focus and not pinned - hiding");
+        try {
+          await appWindow.hide();
+        } catch (e) {
+          console.error("Failed to hide window:", e);
+        }
+      }
+    };
+
+    const unlistenBlur = appWindow.onFocusChanged(({ payload: focused }) => {
+      if (!focused) {
+        handleBlur();
+      }
+    });
+
+    return () => {
+      unlistenBlur.then((fn) => fn());
+    };
+  }, [alwaysOnTop]);
+
+  // Cleanup completion timer on unmount
+  useEffect(() => {
+    return () => {
+      if (completionTimerRef.current !== null) {
+        clearInterval(completionTimerRef.current);
+        completionTimerRef.current = null;
+      }
     };
   }, []);
 
