@@ -83,7 +83,7 @@ AfterPot（以下「本アプリ」）は、以下のデータを収集・使用
 
 ### お問い合わせ
 
-プライバシーに関するご質問は、[GitHub Issues](https://github.com/yourusername/afterpot/issues)でお問い合わせください。
+プライバシーに関するご質問は、[GitHub Issues](https://github.com/kobayashiHawtin/afterPot/issues)でお問い合わせください。
 
 ---
 
@@ -167,4 +167,4 @@ This Privacy Policy may be updated from time to time. Significant changes will b
 
 ### Contact
 
-For privacy-related questions, please contact us via [GitHub Issues](https://github.com/yourusername/afterpot/issues).
+For privacy-related questions, please contact us via [GitHub Issues](https://github.com/kobayashiHawtin/afterPot/issues).

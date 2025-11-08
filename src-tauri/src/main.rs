@@ -39,6 +39,11 @@ fn redact_text(s: &str) -> String {
     }
 }
 
+// Utility: whether verbose logs should be printed (debug build + VERBOSE_LOG env var)
+fn is_verbose() -> bool {
+    cfg!(debug_assertions) && std::env::var("VERBOSE_LOG").is_ok()
+}
+
 // Use selection crate's get_text function (like Pot)
 fn get_selected_text() -> String {
     use selection::get_text;
@@ -97,20 +102,24 @@ async fn translate_text(text: String, target_lang: String, source_lang: String) 
             if response.status().is_success() {
                 match response.json::<serde_json::Value>().await {
                     Ok(json) => {
-                        println!("Received JSON response");
-                        println!("JSON: {}", serde_json::to_string_pretty(&json).unwrap_or_default());
+                        if is_verbose() {
+                            println!("Received JSON response");
+                            println!("JSON: {}", serde_json::to_string_pretty(&json).unwrap_or_default());
+                        } else {
+                            println!("Received JSON response (details hidden in non-verbose mode)");
+                        }
 
                         if let Some(sentences) = json["sentences"].as_array() {
                             println!("Found {} sentences", sentences.len());
                             let mut result = String::new();
                             for sentence in sentences {
                                 if let Some(trans) = sentence["trans"].as_str() {
-                                    println!("Translation part: {}", trans);
+                                    if is_verbose() { println!("Translation part: {}", trans); }
                                     result.push_str(trans);
                                 }
                             }
                             if !result.is_empty() {
-                                println!("Final translation: {}", result);
+                                if is_verbose() { println!("Final translation: {}", result); }
                                 return Ok(result);
                             }
                             println!("No translation found in sentences");
@@ -162,8 +171,12 @@ async fn get_gemini_models(api_key: String) -> Result<Vec<String>, String> {
             // Get response body as text for debugging
             match response.text().await {
                 Ok(body) => {
-                    let preview = truncate_chars(&body, 500);
-                    println!("Response body (first 500 chars): {}", preview);
+                    if is_verbose() {
+                        let preview = truncate_chars(&body, 500);
+                        println!("Response body (first 500 chars): {}", preview);
+                    } else {
+                        println!("Gemini models response received (body hidden in non-verbose mode)");
+                    }
 
                     if status.is_success() {
                         match serde_json::from_str::<serde_json::Value>(&body) {
@@ -188,21 +201,33 @@ async fn get_gemini_models(api_key: String) -> Result<Vec<String>, String> {
                                 Ok(models)
                             }
                             Err(e) => {
-                                let err_msg = format!("Failed to parse JSON: {}", e);
+                                let err_msg = if is_verbose() {
+                                    format!("Failed to parse JSON: {}", e)
+                                } else {
+                                    "Failed to parse JSON".to_string()
+                                };
                                 println!("{}", err_msg);
                                 // Return fallback models if parsing fails
                                 Ok(get_fallback_models())
                             }
                         }
                     } else {
-                        let err_msg = format!("API returned error {}: {}", status, body);
+                        let err_msg = if is_verbose() {
+                            format!("API returned error {}: {}", status, body)
+                        } else {
+                            format!("API returned error {}", status)
+                        };
                         println!("{} - Using fallback models", err_msg);
                         // Return fallback models if API call fails
                         Ok(get_fallback_models())
                     }
                 }
                 Err(e) => {
-                    let err_msg = format!("Failed to read response body: {}", e);
+                    let err_msg = if is_verbose() {
+                        format!("Failed to read response body: {}", e)
+                    } else {
+                        "Failed to read response body".to_string()
+                    };
                     println!("{} - Using fallback models", err_msg);
                     Ok(get_fallback_models())
                 }
@@ -331,7 +356,11 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
         ]
     });
 
-    println!("Request params: {}", serde_json::to_string(&params).unwrap_or_default());
+    if is_verbose() {
+        println!("Request params: {}", serde_json::to_string(&params).unwrap_or_default());
+    } else {
+        println!("Sending Gemini request (params hidden in non-verbose mode)");
+    }
 
     match client.post(&url).json(&params).send().await {
         Ok(response) => {
@@ -341,8 +370,12 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
             if status.is_success() {
                 match response.text().await {
                     Ok(body) => {
-                        let preview = truncate_chars(&body, 300);
-                        println!("Response body (first 300 chars): {}", preview);
+                        if is_verbose() {
+                            let preview = truncate_chars(&body, 300);
+                            println!("Response body (first 300 chars): {}", preview);
+                        } else {
+                            println!("Gemini response received (body hidden in non-verbose mode)");
+                        }
                         match serde_json::from_str::<serde_json::Value>(&body) {
                             Ok(json) => {
                                 if let Some(candidates) = json["candidates"].as_array() {
@@ -380,7 +413,11 @@ async fn translate_with_gemini(text: String, target_lang: String, api_key: Strin
             } else {
                 match response.text().await {
                     Ok(body) => {
-                        let err = format!("Gemini API request failed with status {}: {}", status, body);
+                        let err = if is_verbose() {
+                            format!("Gemini API request failed with status {}: {}", status, body)
+                        } else {
+                            format!("Gemini API request failed with status {}", status)
+                        };
                         println!("Error: {}", err);
                         Err(err)
                     }

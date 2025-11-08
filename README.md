@@ -6,7 +6,7 @@
 
 選択したテキストを瞬時に翻訳 - Google翻訳とGemini AIを活用
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/afterpot/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/kobayashiHawtin/afterPot/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2011-lightgrey.svg)]()
 
@@ -20,7 +20,7 @@
 - 🎨 **クリーンなUI**: コンパクトなポップアップインターフェース
 - 📌 **常時表示対応**: ピン留めで最前面表示（デフォルトOFF）
 - 🔒 **プライバシー重視**: ログの機密情報リダクション機能
-- 💾 **オフライン対応**: WebView2同梱の単一インストーラー
+- 💾 **WebView2自動セットアップ**: 未インストールの場合は自動ダウンロードしてセットアップ
 - 🆓 **Google翻訳は無料**: APIキー不要（Geminiはオプション）
 
 ## インストール
@@ -31,8 +31,8 @@
 
 ### 手順
 
-1. [Releases](https://github.com/yourusername/afterpot/releases/latest)から最新の`AfterPot_1.0.0_x64-setup.exe`をダウンロード
-2. インストーラーを実行（WebView2ランタイムも自動インストールされます）
+1. [Releases](https://github.com/kobayashiHawtin/afterPot/releases/latest)から最新の`AfterPot_1.1.0_x64-setup.exe`をダウンロード
+2. インストーラーを実行（WebView2ランタイムが未インストールの場合は自動ダウンロード・インストールされます）
 3. システムトレイにアイコンが表示されます
 
 **注意**: 初回起動時にWindows Defenderの警告が表示される場合があります（コード署名未実装のため）。「詳細情報」→「実行」で進んでください。
@@ -85,7 +85,7 @@
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/yourusername/afterpot.git
+git clone https://github.com/kobayashiHawtin/afterPot.git
 cd afterpot
 
 # 依存関係のインストール
@@ -210,7 +210,7 @@ MIT License - 詳細は [LICENSE](LICENSE) をご覧ください
 
 ## サポート
 
-問題が発生した場合は、[GitHub Issues](https://github.com/yourusername/afterpot/issues)で報告してください。
+問題が発生した場合は、[GitHub Issues](https://github.com/kobayashiHawtin/afterPot/issues)で報告してください。
 
 バグ報告には以下を含めてください:
 - Windows バージョン
@@ -221,5 +221,5 @@ MIT License - 詳細は [LICENSE](LICENSE) をご覧ください
 ---
 
 **作成**: 2025
-**バージョン**: 1.0.0
+**バージョン**: 1.1.0
 **メンテナンス**: アクティブ
